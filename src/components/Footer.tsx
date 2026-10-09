@@ -112,7 +112,7 @@ export const Footer: React.FC = () => {
         {/* Bottom Bar */}
         <div className="pt-6 border-t border-oled-border flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500 font-mono">
           <div>
-            &copy; {new Date().getFullYear()} Spiny3D &bull; Maintained by Dwij Kansagara (Rajkot, India).
+            &copy; 2026 Spiny3D &bull; Maintained by Dwij Kansagara (Rajkot, India).
           </div>
           <div className="flex items-center gap-4">
             <span>India DPDP Act Ready</span>

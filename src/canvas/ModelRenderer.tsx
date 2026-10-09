@@ -10,28 +10,35 @@ export const ModelRenderer: React.FC<ModelRendererProps> = ({
   modelObject,
   isWireframe,
 }) => {
-  // Clone object to avoid mutating cached geometry/material references
-  const clonedObject = useMemo(() => {
+  // Clone object and apply strict bounding-box normalization
+  const normalizedObject = useMemo(() => {
     const clone = modelObject.clone(true);
 
-    // Auto-center and normalize scale using bounding box
+    // Compute bounding box using Three.js Box3
     const box = new THREE.Box3().setFromObject(clone);
-    const center = new THREE.Vector3();
     const size = new THREE.Vector3();
-    box.getCenter(center);
+    const center = new THREE.Vector3();
     box.getSize(size);
+    box.getCenter(center);
 
-    // Reposition to world origin
+    // Re-center model geometry to [0, 0, 0]
     clone.position.sub(center);
 
-    // Scale to standard view radius ~2.5
+    // Calculate scale so its maximum dimension is strictly 2.0 units
     const maxDim = Math.max(size.x, size.y, size.z);
     if (maxDim > 0) {
-      const scaleFactor = 2.4 / maxDim;
-      clone.scale.multiplyScalar(scaleFactor);
+      const scale = 2.0 / maxDim;
+      clone.scale.multiplyScalar(scale);
+      clone.position.multiplyScalar(scale);
     }
 
-    // Ensure cast/receive shadows
+    // Final precision centering to guarantee exact [0, 0, 0] centroid
+    const finalBox = new THREE.Box3().setFromObject(clone);
+    const finalCenter = new THREE.Vector3();
+    finalBox.getCenter(finalCenter);
+    clone.position.sub(finalCenter);
+
+    // Ensure cast & receive shadows
     clone.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
@@ -42,9 +49,9 @@ export const ModelRenderer: React.FC<ModelRendererProps> = ({
     return clone;
   }, [modelObject]);
 
-  // Apply or remove wireframe dynamically
+  // Apply or remove wireframe dynamically without mutating base textures
   useEffect(() => {
-    clonedObject.traverse((child) => {
+    normalizedObject.traverse((child) => {
       if (child instanceof THREE.Mesh && child.material) {
         if (Array.isArray(child.material)) {
           child.material.forEach((mat) => {
@@ -55,7 +62,7 @@ export const ModelRenderer: React.FC<ModelRendererProps> = ({
         }
       }
     });
-  }, [clonedObject, isWireframe]);
+  }, [normalizedObject, isWireframe]);
 
-  return <primitive object={clonedObject} />;
+  return <primitive object={normalizedObject} />;
 };

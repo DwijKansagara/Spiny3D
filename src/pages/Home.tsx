@@ -10,6 +10,8 @@ import { ControlsToolbar } from '../components/ControlsToolbar';
 import { ExportPanel } from '../components/ExportPanel';
 import { OriginalImagePreview } from '../components/OriginalImagePreview';
 import { ApiSettingsModal } from '../components/ApiSettingsModal';
+import { UpgradeModal } from '../components/UpgradeModal';
+import { useAuth } from '../context/AuthContext';
 import { generate3DModel } from '../api/generate3d';
 import {
   createSneakerMesh,
@@ -25,6 +27,7 @@ import type {
   GenerationProgress,
   Generated3DModel,
   LightingPreset,
+  ModelArchetype,
 } from '../types';
 import { ArrowLeft, Box, Sparkles, AlertCircle } from 'lucide-react';
 
@@ -110,8 +113,19 @@ export const Home: React.FC = () => {
     }
   };
 
-  // Handle User Image Upload
-  const handleImageSelected = async (file: File) => {
+  const { canConvert, incrementConversionCount } = useAuth();
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState<string>('');
+
+  // Handle User Image Upload with Archetype and daily quota check
+  const handleImageSelected = async (file: File, archetype: ModelArchetype = 'auto') => {
+    // Check daily conversion limit
+    if (!canConvert()) {
+      setUpgradeReason('You have reached the free limit of 5 daily volumetric conversions. Upgrade to Pro for unlimited conversions.');
+      setIsUpgradeModalOpen(true);
+      return;
+    }
+
     // Check if cloud engine selected without keys
     if (currentEngine === 'tripo3d' && !tripoKey && !import.meta.env?.VITE_TRIPO_API_KEY) {
       setIsApiModalOpen(true);
@@ -127,6 +141,7 @@ export const Home: React.FC = () => {
 
     const config: GenerationConfig = {
       engine: currentEngine,
+      archetype,
       textureResolution: 1024,
       targetPolycount: 'standard',
       wireframeDefault: false,
@@ -144,6 +159,7 @@ export const Home: React.FC = () => {
       });
 
       if (!isCancelledRef.current) {
+        incrementConversionCount();
         setActiveModel(generated);
         setViewState('viewer');
       }
@@ -374,6 +390,13 @@ export const Home: React.FC = () => {
         tripoKey={tripoKey}
         meshyKey={meshyKey}
         onSaveKeys={handleSaveApiKeys}
+      />
+
+      {/* Upgrade Gate Modal for daily conversion limits */}
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        reason={upgradeReason}
       />
 
       <Footer />

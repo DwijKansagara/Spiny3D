@@ -52,8 +52,20 @@ export interface PresetDemo {
 
 export type EngineProvider = 'mock_local' | 'tripo3d' | 'meshy' | 'lgm';
 
+export type ModelArchetype =
+  | 'auto'
+  | 'dog'
+  | 'cat'
+  | 'duck'
+  | 'sneaker'
+  | 'mug'
+  | 'toycar'
+  | 'robot'
+  | 'furniture';
+
 export interface GenerationConfig {
   engine: EngineProvider;
+  archetype?: ModelArchetype;
   textureResolution: 1024 | 2048;
   targetPolycount: 'standard' | 'high';
   wireframeDefault: boolean;
@@ -61,4 +73,34 @@ export interface GenerationConfig {
     tripo?: string;
     meshy?: string;
   };
+}
+
+export type UserPlan = 'free' | 'pro' | 'studio';
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  plan: UserPlan;
+  avatarUrl?: string;
+  conversionsToday: number;
+  maxDailyConversions: number;
+  isGuest: boolean;
+  createdAt: string;
+}
+
+export type BillingCycle = 'monthly' | 'yearly';
+export type Currency = 'USD' | 'INR';
+
+export interface PricingTier {
+  id: UserPlan;
+  name: string;
+  tagline: string;
+  monthlyPriceUSD: number;
+  yearlyPriceUSD: number;
+  monthlyPriceINR: number;
+  yearlyPriceINR: number;
+  features: string[];
+  isPopular?: boolean;
+  buttonLabel: string;
 }

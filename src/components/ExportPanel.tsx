@@ -8,6 +8,8 @@ import {
   AlertTriangle,
   Info,
   Layers,
+  Sparkles,
+  Lock,
 } from 'lucide-react';
 import {
   exportToGLB,
@@ -15,6 +17,8 @@ import {
   captureCanvasSnapshot,
   checkARAvailability,
 } from '../utils/modelExporters';
+import { useAuth } from '../context/AuthContext';
+import { UpgradeModal } from './UpgradeModal';
 import type { ModelStats } from '../types';
 
 interface ExportPanelProps {
@@ -30,10 +34,14 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
   stats,
   getCanvasElement,
 }) => {
+  const { isProOrHigher } = useAuth();
+
   const [isExportingGlb, setIsExportingGlb] = useState(false);
   const [isExportingObj, setIsExportingObj] = useState(false);
   const [exportNotice, setExportNotice] = useState<string | null>(null);
   const [isARModalOpen, setIsARModalOpen] = useState(false);
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState<string>('');
 
   const handleExportGLB = async () => {
     if (!modelObject) return;
@@ -53,6 +61,14 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
 
   const handleExportOBJ = async () => {
     if (!modelObject) return;
+
+    // Pro-tier Export Gate
+    if (!isProOrHigher) {
+      setUpgradeReason('Wavefront .OBJ export with material coordinates is an exclusive feature of Spiny3D Pro.');
+      setIsUpgradeOpen(true);
+      return;
+    }
+
     setIsExportingObj(true);
     setExportNotice(null);
     try {
@@ -65,6 +81,16 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
       setIsExportingObj(false);
       setTimeout(() => setExportNotice(null), 5000);
     }
+  };
+
+  const handleExportUSDZ = () => {
+    if (!isProOrHigher) {
+      setUpgradeReason('Apple USDZ Quick Look and native AR export is available on Spiny3D Pro.');
+      setIsUpgradeOpen(true);
+      return;
+    }
+    // For pro users, trigger GLB/USDZ asset
+    handleExportGLB();
   };
 
   const handleCaptureSnapshot = () => {
@@ -110,26 +136,32 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
 
       {/* Export Action Buttons */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        {/* Download GLB */}
+        {/* Download GLB (Free) */}
         <button
           type="button"
           onClick={handleExportGLB}
           disabled={!modelObject || isExportingGlb}
-          className="p-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-medium text-xs flex flex-col items-center justify-center gap-1.5 transition-transform active:scale-[0.98] disabled:opacity-50 shadow-subtle"
-          title="Download production-standard binary glTF file"
+          className="p-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-medium text-xs flex flex-col items-center justify-center gap-1.5 transition-transform active:scale-[0.98] disabled:opacity-50 shadow-subtle relative"
+          title="Download production-standard binary glTF file (Free)"
         >
           <Download className="w-4 h-4" aria-hidden="true" />
           <span className="font-mono font-bold">Download .GLB</span>
         </button>
 
-        {/* Download OBJ */}
+        {/* Download OBJ (Pro Gate) */}
         <button
           type="button"
           onClick={handleExportOBJ}
           disabled={!modelObject || isExportingObj}
-          className="p-3 rounded-xl bg-oled-surface hover:bg-oled-panel text-zinc-200 border border-oled-border font-medium text-xs flex flex-col items-center justify-center gap-1.5 transition-transform active:scale-[0.98] disabled:opacity-50"
-          title="Download Wavefront OBJ 3D mesh"
+          className="p-3 rounded-xl bg-oled-surface hover:bg-oled-panel text-zinc-200 border border-oled-border font-medium text-xs flex flex-col items-center justify-center gap-1.5 transition-transform active:scale-[0.98] disabled:opacity-50 relative group"
+          title={isProOrHigher ? 'Download Wavefront OBJ 3D mesh' : 'Pro Feature: Wavefront .OBJ export'}
         >
+          {!isProOrHigher && (
+            <span className="absolute top-1.5 right-1.5 px-1 py-0.2 rounded text-[9px] font-mono bg-zinc-800 text-emerald-400 border border-zinc-700 flex items-center gap-0.5">
+              <Lock className="w-2.5 h-2.5" />
+              <span>PRO</span>
+            </span>
+          )}
           <Layers className="w-4 h-4 text-emerald-400" aria-hidden="true" />
           <span className="font-mono">Download .OBJ</span>
         </button>
@@ -219,7 +251,7 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
                 <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-800/40 text-amber-200 text-xs flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
                   <span>
-                    To experience real-world passthrough AR, open Spiny3D on an iOS or Android device with WebXR/ARKit support, or download the .GLB model into a mobile viewer.
+                    To experience real-world passthrough AR, open Spiny3D on an iOS or Android device with WebXR/ARKit support, or download the 3D model into a mobile viewer.
                   </span>
                 </div>
               ) : (
@@ -232,7 +264,15 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
               )}
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={handleExportUSDZ}
+                className="px-3 py-2 rounded-xl bg-oled-panel hover:bg-zinc-800 text-zinc-200 border border-oled-border font-medium text-xs font-mono flex items-center justify-center gap-1.5"
+              >
+                {!isProOrHigher && <Sparkles className="w-3.5 h-3.5 text-emerald-400" />}
+                <span>Export USDZ (AR Ready)</span>
+              </button>
               <button
                 type="button"
                 onClick={handleExportGLB}
@@ -244,6 +284,13 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
           </div>
         </div>
       )}
+
+      {/* Pro Upgrade Gate Modal */}
+      <UpgradeModal
+        isOpen={isUpgradeOpen}
+        onClose={() => setIsUpgradeOpen(false)}
+        reason={upgradeReason}
+      />
     </div>
   );
 };

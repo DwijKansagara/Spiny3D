@@ -1,6 +1,6 @@
-import { useRef, useImperativeHandle, forwardRef, Suspense } from 'react';
+import { useRef, useState, useImperativeHandle, forwardRef, Suspense, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, ContactShadows, Center } from '@react-three/drei';
+import { OrbitControls, ContactShadows, Center, Bounds, useBounds, PerspectiveCamera } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import * as THREE from 'three';
 import { LightingRig } from './LightingRig';
@@ -19,16 +19,32 @@ interface Viewer3DProps {
   isAutoSpin: boolean;
 }
 
+// Helper inside Bounds to trigger auto-fit when camera is reset or model is loaded
+function BoundsAutoFitController({ trigger }: { trigger: number }) {
+  const bounds = useBounds();
+
+  useEffect(() => {
+    if (bounds) {
+      bounds.refresh().clip().fit();
+    }
+  }, [bounds, trigger]);
+
+  return null;
+}
+
 export const Viewer3D = forwardRef<Viewer3DHandle, Viewer3DProps>(
   ({ modelObject, lightingPreset, isWireframe, isAutoSpin }, ref) => {
     const controlsRef = useRef<OrbitControlsImpl>(null);
     const canvasContainerRef = useRef<HTMLDivElement>(null);
+    const [resetSignal, setResetSignal] = useState(0);
 
     useImperativeHandle(ref, () => ({
       resetCamera: () => {
         if (controlsRef.current) {
+          controlsRef.current.target.set(0, 0, 0);
           controlsRef.current.reset();
         }
+        setResetSignal((prev) => prev + 1);
       },
       getCanvasElement: () => {
         return canvasContainerRef.current?.querySelector('canvas') || null;
@@ -45,7 +61,6 @@ export const Viewer3D = forwardRef<Viewer3DHandle, Viewer3DProps>(
       >
         <Canvas
           shadows={{ type: THREE.PCFShadowMap }}
-          camera={{ position: [0, 1.4, 4.0], fov: 45 }}
           gl={{
             antialias: true,
             alpha: false,
@@ -54,6 +69,9 @@ export const Viewer3D = forwardRef<Viewer3DHandle, Viewer3DProps>(
           }}
           className="w-full h-full cursor-grab active:cursor-grabbing"
         >
+          {/* Calibrated Perspective Camera with fov=45 */}
+          <PerspectiveCamera makeDefault position={[0, 1.5, 4.0]} fov={45} />
+
           {/* Lighting Environment */}
           <LightingRig preset={lightingPreset} />
 
@@ -64,40 +82,43 @@ export const Viewer3D = forwardRef<Viewer3DHandle, Viewer3DProps>(
             dampingFactor={0.05}
             autoRotate={isAutoSpin}
             autoRotateSpeed={1.2}
-            minDistance={0.8}
+            minDistance={0.5}
             maxDistance={12.0}
             minPolarAngle={0}
             maxPolarAngle={Math.PI}
-            target={[0, 0.7, 0]}
+            target={[0, 0, 0]}
             makeDefault
           />
 
-          {/* Model Auto-Centering and Bounds Normalization */}
+          {/* Model Auto-Bounds Normalization & Auto-Fit */}
           <Suspense fallback={null}>
             {modelObject && (
-              <Center top position={[0, 0, 0]}>
-                <ModelRenderer
-                  modelObject={modelObject}
-                  isWireframe={isWireframe}
-                />
-              </Center>
+              <Bounds fit clip observe margin={1.2}>
+                <BoundsAutoFitController trigger={resetSignal} />
+                <Center position={[0, 0, 0]}>
+                  <ModelRenderer
+                    modelObject={modelObject}
+                    isWireframe={isWireframe}
+                  />
+                </Center>
+              </Bounds>
             )}
           </Suspense>
 
-          {/* Horizontal Ground Contact Shadow at Base (Never clips into object back) */}
+          {/* Horizontal Ground Contact Shadow at base (y = -1.02, never clips into back of normalized object) */}
           <ContactShadows
-            position={[0, -0.01, 0]}
+            position={[0, -1.02, 0]}
             opacity={0.65}
-            scale={10}
-            blur={2.2}
-            far={4.0}
+            scale={7}
+            blur={2.0}
+            far={3.5}
             color="#000000"
           />
 
           {/* Horizontal Shadow Receiver Plane */}
           <mesh
             rotation={[-Math.PI / 2, 0, 0]}
-            position={[0, -0.015, 0]}
+            position={[0, -1.025, 0]}
             receiveShadow
           >
             <planeGeometry args={[20, 20]} />
@@ -107,7 +128,7 @@ export const Viewer3D = forwardRef<Viewer3DHandle, Viewer3DProps>(
           {/* Ground Grid for spatial orientation */}
           <gridHelper
             args={[12, 16, '#2a3044', '#181b26']}
-            position={[0, -0.018, 0]}
+            position={[0, -1.03, 0]}
           />
         </Canvas>
 

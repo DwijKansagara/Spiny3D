@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, Camera, AlertCircle, CheckCircle2, Image as ImageIcon } from 'lucide-react';
+import { UploadCloud, Camera, AlertCircle, CheckCircle2, Image as ImageIcon, Sparkles } from 'lucide-react';
 import { validateImageFile } from '../utils/fileSecurity';
+import type { ModelArchetype } from '../types';
 
 interface UploadZoneProps {
-  onImageSelected: (file: File) => void;
+  onImageSelected: (file: File, archetype: ModelArchetype) => void;
   isProcessing: boolean;
 }
 
@@ -14,6 +15,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
   const [isDragOver, setIsDragOver] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(false);
+  const [selectedArchetype, setSelectedArchetype] = useState<ModelArchetype>('auto');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -30,7 +32,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
         return;
       }
 
-      onImageSelected(file);
+      onImageSelected(file, selectedArchetype);
     } catch (err) {
       console.error('File validation exception:', err);
       setErrorMessage('A security exception occurred during file verification.');
@@ -114,9 +116,33 @@ export const UploadZone: React.FC<UploadZoneProps> = ({
         <h2 className="text-lg sm:text-xl font-semibold text-zinc-100 mb-2 font-mono">
           Drop your 2D image here or browse
         </h2>
-        <p className="text-xs sm:text-sm text-zinc-400 max-w-md mb-6 leading-relaxed">
+        <p className="text-xs sm:text-sm text-zinc-400 max-w-md mb-5 leading-relaxed">
           Supports high-resolution JPEG, PNG, and WebP (up to 15MB). Header magic bytes are screened client-side.
         </p>
+
+        {/* Model Archetype Target Selector */}
+        <div className="mb-6 p-2 rounded-xl bg-oled-panel border border-oled-border flex flex-col sm:flex-row items-center gap-2 text-xs font-mono">
+          <div className="flex items-center gap-1.5 text-zinc-400 px-2">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Target Archetype:</span>
+          </div>
+          <select
+            value={selectedArchetype}
+            onChange={(e) => setSelectedArchetype(e.target.value as ModelArchetype)}
+            className="bg-oled-surface text-zinc-200 border border-oled-border rounded-lg px-3 py-1.5 focus:outline-none focus:border-emerald-500 cursor-pointer text-xs"
+            aria-label="Select target 3D model archetype or auto-detection"
+          >
+            <option value="auto">Auto-Detect from image & filename</option>
+            <option value="dog">Dog / Canine Companion</option>
+            <option value="cat">Cat / Fox / Wildlife</option>
+            <option value="sneaker">Sneaker / Footwear</option>
+            <option value="mug">Ceramic Mug / Dishware</option>
+            <option value="duck">Duck / Mascot Toy</option>
+            <option value="toycar">Vehicle / Toy Car</option>
+            <option value="robot">Industrial Robot / Hardware</option>
+            <option value="furniture">Furniture / Object Box</option>
+          </select>
+        </div>
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center justify-center gap-3 w-full max-w-sm">

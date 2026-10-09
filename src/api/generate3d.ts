@@ -67,6 +67,7 @@ function fileToBase64(file: File): Promise<string> {
 async function runLocalMockPipeline(
   imageFile: File,
   imageUrl: string,
+  archetype: import('../types').ModelArchetype = 'auto',
   onProgress?: ProgressCallback
 ): Promise<Generated3DModel> {
   const startTime = Date.now();
@@ -89,16 +90,17 @@ async function runLocalMockPipeline(
     await new Promise((resolve) => setTimeout(resolve, stage.durationMs));
   }
 
-  // Generate real, full 360° volumetric model
-  const meshGroup = await createVolumetricModelFromImage(imageUrl);
+  // Generate dynamic 360° volumetric model reflecting uploaded image colors, textures, and archetype
+  const { mesh: meshGroup, archetype: detectedArchetype, glbPath } =
+    await createVolumetricModelFromImage(imageUrl, imageFile.name, archetype);
   const stats = calculateObjectStats(meshGroup);
 
   const finalModel: Generated3DModel = {
     id: `mesh-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-    name: imageFile.name.replace(/\.[^/.]+$/, ''),
+    name: `${imageFile.name.replace(/\.[^/.]+$/, '')} (${detectedArchetype.toUpperCase()})`,
     sourceImageUrl: imageUrl,
     originalFileName: imageFile.name,
-    glbUrl: '/models/sample-animal.glb',
+    glbUrl: glbPath || '/models/sample-animal.glb',
     meshObject: meshGroup,
     stats: {
       vertices: stats.vertices || 4320,
@@ -115,7 +117,7 @@ async function runLocalMockPipeline(
     stepNumber: 4,
     totalSteps: 4,
     percent: 100,
-    message: 'Full volumetric 3D model loaded and centered in viewport.',
+    message: `Dynamic 360° ${detectedArchetype} model baked with uploaded textures.`,
     elapsedSeconds: Math.round((Date.now() - startTime) / 1000),
   });
 
@@ -428,8 +430,8 @@ export async function generate3DModel(
       return await runMeshyPipeline(apiKey, file, localUrl, onProgress);
     }
 
-    // Default: Local Mock 3D Engine (Full 360° Volumetric Model)
-    return await runLocalMockPipeline(file, localUrl, onProgress);
+    // Default: Local Mock 3D Engine (Full 360° Volumetric Model with dynamic texture baking)
+    return await runLocalMockPipeline(file, localUrl, config.archetype || 'auto', onProgress);
   } catch (err) {
     console.error('3D Generation failure:', err);
     throw err;
