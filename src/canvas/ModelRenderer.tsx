@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 interface ModelRendererProps {
@@ -10,6 +11,10 @@ export const ModelRenderer: React.FC<ModelRendererProps> = ({
   modelObject,
   isWireframe,
 }) => {
+  const groupRef = useRef<THREE.Group>(null);
+  const mountScaleRef = useRef<number>(0.94);
+  const isTransitioningRef = useRef<boolean>(true);
+
   // Clone object and apply strict bounding-box normalization
   const normalizedObject = useMemo(() => {
     const clone = modelObject.clone(true);
@@ -49,6 +54,35 @@ export const ModelRenderer: React.FC<ModelRendererProps> = ({
     return clone;
   }, [modelObject]);
 
+  // Reset transition spring on new model mount
+  useEffect(() => {
+    mountScaleRef.current = 0.94;
+    isTransitioningRef.current = true;
+    if (groupRef.current) {
+      groupRef.current.scale.setScalar(0.94);
+    }
+  }, [modelObject]);
+
+  // Spring physics mount transition (AnimMasterLib / Josh Comeau style)
+  useFrame((_, delta) => {
+    if (isTransitioningRef.current && groupRef.current) {
+      // Smoothly damp scale from 0.94 to 1.0 with spring ease
+      mountScaleRef.current = THREE.MathUtils.damp(
+        mountScaleRef.current,
+        1.0,
+        12, // Spring response velocity
+        delta
+      );
+
+      groupRef.current.scale.setScalar(mountScaleRef.current);
+
+      if (Math.abs(mountScaleRef.current - 1.0) < 0.001) {
+        groupRef.current.scale.setScalar(1.0);
+        isTransitioningRef.current = false;
+      }
+    }
+  });
+
   // Apply or remove wireframe dynamically without mutating base textures
   useEffect(() => {
     normalizedObject.traverse((child) => {
@@ -64,5 +98,9 @@ export const ModelRenderer: React.FC<ModelRendererProps> = ({
     });
   }, [normalizedObject, isWireframe]);
 
-  return <primitive object={normalizedObject} />;
+  return (
+    <group ref={groupRef}>
+      <primitive object={normalizedObject} />
+    </group>
+  );
 };

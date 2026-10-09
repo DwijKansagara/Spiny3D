@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import type * as THREE from 'three';
+import { springTactile } from '../utils/motion';
 import {
   Download,
   Camera,
@@ -35,6 +37,7 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
   getCanvasElement,
 }) => {
   const { isProOrHigher } = useAuth();
+  const shouldReduceMotion = useReducedMotion();
 
   const [isExportingGlb, setIsExportingGlb] = useState(false);
   const [isExportingObj, setIsExportingObj] = useState(false);
@@ -134,26 +137,32 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
         </div>
       )}
 
-      {/* Export Action Buttons */}
+      {/* Export Action Buttons with Josh Comeau Tactile Springs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         {/* Download GLB (Free) */}
-        <button
+        <motion.button
           type="button"
           onClick={handleExportGLB}
           disabled={!modelObject || isExportingGlb}
-          className="p-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-medium text-xs flex flex-col items-center justify-center gap-1.5 transition-transform active:scale-[0.98] disabled:opacity-50 shadow-subtle relative"
+          whileHover={shouldReduceMotion ? undefined : { scale: 1.02, y: -1 }}
+          whileTap={shouldReduceMotion ? undefined : { scale: 0.96 }}
+          transition={springTactile}
+          className="p-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-medium text-xs flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 shadow-subtle relative overflow-hidden"
           title="Download production-standard binary glTF file (Free)"
         >
           <Download className="w-4 h-4" aria-hidden="true" />
           <span className="font-mono font-bold">Download .GLB</span>
-        </button>
+        </motion.button>
 
         {/* Download OBJ (Pro Gate) */}
-        <button
+        <motion.button
           type="button"
           onClick={handleExportOBJ}
           disabled={!modelObject || isExportingObj}
-          className="p-3 rounded-xl bg-oled-surface hover:bg-oled-panel text-zinc-200 border border-oled-border font-medium text-xs flex flex-col items-center justify-center gap-1.5 transition-transform active:scale-[0.98] disabled:opacity-50 relative group"
+          whileHover={shouldReduceMotion ? undefined : { scale: 1.02, y: -1 }}
+          whileTap={shouldReduceMotion ? undefined : { scale: 0.96 }}
+          transition={springTactile}
+          className="p-3 rounded-2xl bg-oled-surface hover:bg-zinc-800 text-zinc-200 border border-oled-border font-medium text-xs flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 relative group"
           title={isProOrHigher ? 'Download Wavefront OBJ 3D mesh' : 'Pro Feature: Wavefront .OBJ export'}
         >
           {!isProOrHigher && (
@@ -164,31 +173,37 @@ export const ExportPanel: React.FC<ExportPanelProps> = ({
           )}
           <Layers className="w-4 h-4 text-emerald-400" aria-hidden="true" />
           <span className="font-mono">Download .OBJ</span>
-        </button>
+        </motion.button>
 
         {/* Turnaround Snapshot */}
-        <button
+        <motion.button
           type="button"
           onClick={handleCaptureSnapshot}
           disabled={!modelObject}
-          className="p-3 rounded-xl bg-oled-surface hover:bg-oled-panel text-zinc-200 border border-oled-border font-medium text-xs flex flex-col items-center justify-center gap-1.5 transition-transform active:scale-[0.98] disabled:opacity-50"
+          whileHover={shouldReduceMotion ? undefined : { scale: 1.02, y: -1 }}
+          whileTap={shouldReduceMotion ? undefined : { scale: 0.96 }}
+          transition={springTactile}
+          className="p-3 rounded-2xl bg-oled-surface hover:bg-zinc-800 text-zinc-200 border border-oled-border font-medium text-xs flex flex-col items-center justify-center gap-1.5 disabled:opacity-50"
           title="Capture current camera angle to high-res PNG frame"
         >
           <Camera className="w-4 h-4 text-cyan-400" aria-hidden="true" />
           <span className="font-mono">Turnaround Frame</span>
-        </button>
+        </motion.button>
 
         {/* View in AR */}
-        <button
+        <motion.button
           type="button"
           onClick={handleOpenAR}
           disabled={!modelObject}
-          className="p-3 rounded-xl bg-oled-surface hover:bg-oled-panel text-zinc-200 border border-oled-border font-medium text-xs flex flex-col items-center justify-center gap-1.5 transition-transform active:scale-[0.98] disabled:opacity-50"
+          whileHover={shouldReduceMotion ? undefined : { scale: 1.02, y: -1 }}
+          whileTap={shouldReduceMotion ? undefined : { scale: 0.96 }}
+          transition={springTactile}
+          className="p-3 rounded-2xl bg-oled-surface hover:bg-zinc-800 text-zinc-200 border border-oled-border font-medium text-xs flex flex-col items-center justify-center gap-1.5 disabled:opacity-50"
           title="Inspect model in Augmented Reality"
         >
           <Glasses className="w-4 h-4 text-emerald-400" aria-hidden="true" />
           <span className="font-mono">View in AR</span>
-        </button>
+        </motion.button>
       </div>
 
       {/* Export notification feedback */}

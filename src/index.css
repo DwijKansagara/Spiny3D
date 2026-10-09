@@ -64,3 +64,43 @@
   user-select: none;
   -webkit-user-select: none;
 }
+
+/* Aceternity UI & AnimMasterLib Animation Keyframes */
+@keyframes border-beam {
+  100% {
+    offset-distance: 100%;
+  }
+}
+
+.animate-border-beam {
+  animation: border-beam 8s linear infinite;
+}
+
+@keyframes laser-sweep {
+  0% {
+    top: 0%;
+    opacity: 0.8;
+  }
+  50% {
+    top: 100%;
+    opacity: 1;
+  }
+  100% {
+    top: 0%;
+    opacity: 0.8;
+  }
+}
+
+.animate-laser-sweep {
+  animation: laser-sweep 2.4s ease-in-out infinite;
+}
+
+@keyframes dash-pulse {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+
+.animate-dash-pulse {
+  animation: dash-pulse 1.2s linear infinite;
+}

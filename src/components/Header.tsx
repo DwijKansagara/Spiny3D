@@ -14,6 +14,8 @@ import {
   Sparkles,
   ChevronDown,
 } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { tactileButtonVariants, reducedMotionVariants, springTactile } from '../utils/motion';
 import type { EngineProvider } from '../types';
 
 interface HeaderProps {
@@ -39,6 +41,11 @@ export const Header: React.FC<HeaderProps> = ({
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
+  const shouldReduceMotion = useReducedMotion();
+
+  const motionProps = shouldReduceMotion
+    ? { variants: reducedMotionVariants }
+    : { variants: tactileButtonVariants, transition: springTactile };
 
   const isHome = location.pathname === '/';
   const isPricing = location.pathname === '/pricing' || location.pathname === '/plans';
@@ -141,8 +148,11 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Cloud API Keys Config Button */}
-          <button
+          <motion.button
             type="button"
+            whileHover="hover"
+            whileTap="tap"
+            {...motionProps}
             onClick={onOpenApiSettings}
             className="px-2.5 py-1.5 rounded-lg bg-oled-surface hover:bg-oled-panel border border-oled-border text-xs font-mono text-zinc-300 hover:text-zinc-100 flex items-center gap-1.5 transition-colors"
             title="Configure Tripo3D or Meshy.ai API credentials"
@@ -150,7 +160,7 @@ export const Header: React.FC<HeaderProps> = ({
             <Key className={`w-3.5 h-3.5 ${hasCustomKeys ? 'text-emerald-400' : 'text-zinc-400'}`} aria-hidden="true" />
             <span className="hidden sm:inline">API Keys</span>
             {hasCustomKeys && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
-          </button>
+          </motion.button>
 
           {/* Privacy Security Status */}
           <div
@@ -164,8 +174,11 @@ export const Header: React.FC<HeaderProps> = ({
           {/* User Account / Auth Button */}
           {isAuthenticated ? (
             <div className="relative" ref={menuRef}>
-              <button
+              <motion.button
                 type="button"
+                whileHover="hover"
+                whileTap="tap"
+                {...motionProps}
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center gap-2 pl-2.5 pr-2 py-1.5 rounded-xl bg-oled-surface hover:bg-oled-panel border border-oled-border text-xs font-mono text-zinc-200 transition-colors"
                 aria-expanded={isUserMenuOpen}
@@ -187,7 +200,7 @@ export const Header: React.FC<HeaderProps> = ({
                   {user.plan}
                 </span>
                 <ChevronDown className="w-3 h-3 text-zinc-500" />
-              </button>
+              </motion.button>
 
               {/* User Dropdown Menu */}
               {isUserMenuOpen && (
@@ -248,26 +261,32 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <button
+              <motion.button
                 type="button"
+                whileHover="hover"
+                whileTap="tap"
+                {...motionProps}
                 onClick={() => setIsAuthOpen(true)}
-                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-mono font-bold text-xs flex items-center gap-1.5 transition-transform active:scale-[0.98] shadow-subtle"
+                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-mono font-bold text-xs flex items-center gap-1.5 shadow-subtle"
               >
                 <User className="w-3.5 h-3.5" />
                 <span>Sign In</span>
-              </button>
+              </motion.button>
             </div>
           )}
 
           {/* Direct Developer Email */}
-          <a
+          <motion.a
             href="mailto:work.dwijkansagara@gmail.com"
-            className="p-2 rounded-lg bg-oled-surface border border-oled-border text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 transition-colors"
+            whileHover="hover"
+            whileTap="tap"
+            {...motionProps}
+            className="p-2 rounded-lg bg-oled-surface border border-oled-border text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 transition-colors inline-flex items-center justify-center"
             aria-label="Email developer Dwij Kansagara directly"
             title="work.dwijkansagara@gmail.com"
           >
             <Mail className="w-4 h-4" />
-          </a>
+          </motion.a>
         </div>
       </div>
 

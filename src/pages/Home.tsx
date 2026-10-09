@@ -46,6 +46,8 @@ export const Home: React.FC = () => {
 
   // Active Model
   const [activeModel, setActiveModel] = useState<Generated3DModel | null>(null);
+  const [processingImageUrl, setProcessingImageUrl] = useState<string | null>(null);
+  const [processingFileName, setProcessingFileName] = useState<string | null>(null);
 
   // Processing Progress
   const [progress, setProgress] = useState<GenerationProgress>({
@@ -136,6 +138,9 @@ export const Home: React.FC = () => {
       return;
     }
 
+    const previewUrl = URL.createObjectURL(file);
+    setProcessingImageUrl(previewUrl);
+    setProcessingFileName(file.name);
     setViewState('processing');
     isCancelledRef.current = false;
 
@@ -303,7 +308,8 @@ export const Home: React.FC = () => {
             <ProcessingView
               progress={progress}
               onCancel={handleCancelProcessing}
-              fileName={activeModel?.originalFileName}
+              fileName={processingFileName || activeModel?.originalFileName}
+              sourceImageUrl={processingImageUrl || activeModel?.sourceImageUrl}
             />
           </div>
         )}
