@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Allow: /privacy
+Allow: /terms
+Allow: /cookies
+Allow: /refund
+
+Sitemap: https://spiny3d.dwijkansagara.in/sitemap.xml
