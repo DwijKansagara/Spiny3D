@@ -65,7 +65,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => 
         return;
       }
       if (!agreedToTerms) {
-        setErrorMessage('You must review and accept the DPDP Terms and Privacy Policy to continue.');
+        setErrorMessage('You must review and accept the Terms and Privacy Policy to continue.');
         return;
       }
     }
@@ -75,7 +75,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => 
       if (mode === 'login') {
         const res = await login(email, password);
         if (res.success) {
-          setSuccessMessage('Successfully signed in. Redirecting to studio...');
+          setSuccessMessage('Demo session initialized. Redirecting to studio...');
           setTimeout(() => navigate('/'), 500);
         } else {
           setErrorMessage(res.error || 'Failed to sign in.');
@@ -83,7 +83,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => 
       } else {
         const res = await register(email, password, name, agreedToTerms);
         if (res.success) {
-          setSuccessMessage('Account created successfully. Redirecting to studio...');
+          setSuccessMessage('Demo session created. Redirecting to studio...');
           setTimeout(() => navigate('/'), 500);
         } else {
           setErrorMessage(res.error || 'Failed to create account.');
@@ -146,6 +146,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => 
                 ? 'Sign in to access unlimited conversions, high-poly watertight meshes, and Pro export formats.'
                 : 'Convert 2D images to full 360° volumetric 3D models with responsive touch orbit.'}
             </p>
+            <div className="p-3 rounded-xl bg-oled-panel border border-oled-border text-[11px] font-sans text-zinc-300 text-left space-y-1">
+              <span className="font-mono text-emerald-400 font-semibold block">Browser Demo Session</span>
+              <p>
+                Spiny3D operates entirely in your browser. This sign-in simulates a workspace session in local storage for demonstration purposes. Do not enter passwords you use on external accounts.
+              </p>
+            </div>
           </div>
 
           {/* Mode Switcher */}

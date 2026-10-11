@@ -475,13 +475,10 @@ export const PricingPage: React.FC = () => {
       <ApiSettingsModal
         isOpen={isApiSettingsOpen}
         onClose={() => setIsApiSettingsOpen(false)}
-        tripoKey={sessionStorage.getItem('spiny3d_tripo_key') || ''}
-        meshyKey={sessionStorage.getItem('spiny3d_meshy_key') || ''}
-        onSaveKeys={(keys) => {
-          if (keys.tripo) sessionStorage.setItem('spiny3d_tripo_key', keys.tripo);
-          else sessionStorage.removeItem('spiny3d_tripo_key');
-          if (keys.meshy) sessionStorage.setItem('spiny3d_meshy_key', keys.meshy);
-          else sessionStorage.removeItem('spiny3d_meshy_key');
+        tripoKey=""
+        meshyKey=""
+        onSaveKeys={() => {
+          setIsApiSettingsOpen(false);
         }}
       />
     </div>

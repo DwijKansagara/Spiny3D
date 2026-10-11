@@ -5,4 +5,4 @@ Allow: /terms
 Allow: /cookies
 Allow: /refund
 
-Sitemap: https://spiny3d.dwijkansagara.in/sitemap.xml
+Sitemap: https://spiny3d.antideploy.app/sitemap.xml

@@ -38,9 +38,9 @@ export const Home: React.FC = () => {
   // Engine selection
   const [currentEngine, setCurrentEngine] = useState<EngineProvider>('mock_local');
 
-  // API Credentials State (in-session storage, never permanent)
-  const [tripoKey, setTripoKey] = useState<string>(() => sessionStorage.getItem('spiny3d_tripo_key') || '');
-  const [meshyKey, setMeshyKey] = useState<string>(() => sessionStorage.getItem('spiny3d_meshy_key') || '');
+  // API Credentials State (Cloud keys disabled in client demo mode)
+  const [tripoKey, setTripoKey] = useState<string>('');
+  const [meshyKey, setMeshyKey] = useState<string>('');
   const [isApiModalOpen, setIsApiModalOpen] = useState(false);
   const [engineNotice, setEngineNotice] = useState<string | null>(null);
 
@@ -76,17 +76,12 @@ export const Home: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isCancelledRef = useRef<boolean>(false);
 
-  // Save API keys to session
-  const handleSaveApiKeys = (keys: { tripo: string; meshy: string }) => {
-    setTripoKey(keys.tripo);
-    setMeshyKey(keys.meshy);
-    if (keys.tripo) sessionStorage.setItem('spiny3d_tripo_key', keys.tripo);
-    else sessionStorage.removeItem('spiny3d_tripo_key');
-
-    if (keys.meshy) sessionStorage.setItem('spiny3d_meshy_key', keys.meshy);
-    else sessionStorage.removeItem('spiny3d_meshy_key');
-
+  // API modal notice handler
+  const handleSaveApiKeys = (_keys: { tripo: string; meshy: string }) => {
+    setTripoKey('');
+    setMeshyKey('');
     setEngineNotice(null);
+    setIsApiModalOpen(false);
   };
 
   // Sync functional preferences to localStorage
@@ -106,12 +101,8 @@ export const Home: React.FC = () => {
   const handleEngineChange = (engine: EngineProvider) => {
     setCurrentEngine(engine);
     setEngineNotice(null);
-    if (engine === 'tripo3d' && !tripoKey && !import.meta.env?.VITE_TRIPO_API_KEY) {
-      setEngineNotice('Tripo3D selected. Please configure your TRIPO_API_KEY in API Settings to connect live cloud generation.');
-      setIsApiModalOpen(true);
-    } else if (engine === 'meshy' && !meshyKey && !import.meta.env?.VITE_MESHY_API_KEY) {
-      setEngineNotice('Meshy.ai selected. Please configure your MESHY_API_KEY in API Settings to connect live cloud generation.');
-      setIsApiModalOpen(true);
+    if (engine === 'tripo3d' || engine === 'meshy') {
+      setEngineNotice('Cloud providers are disabled in this client-side demo to protect API credentials. Running local procedural reconstruction engine.');
     }
   };
 
@@ -125,16 +116,6 @@ export const Home: React.FC = () => {
     if (!canConvert()) {
       setUpgradeReason('You have reached the free limit of 5 daily volumetric conversions. Upgrade to Pro for unlimited conversions.');
       setIsUpgradeModalOpen(true);
-      return;
-    }
-
-    // Check if cloud engine selected without keys
-    if (currentEngine === 'tripo3d' && !tripoKey && !import.meta.env?.VITE_TRIPO_API_KEY) {
-      setIsApiModalOpen(true);
-      return;
-    }
-    if (currentEngine === 'meshy' && !meshyKey && !import.meta.env?.VITE_MESHY_API_KEY) {
-      setIsApiModalOpen(true);
       return;
     }
 
